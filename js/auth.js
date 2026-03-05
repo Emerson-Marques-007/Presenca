@@ -81,18 +81,15 @@ const Auth = {
   // --- Login por matrícula ---
   async loginPorMatricula(matricula, senha) {
     try {
-      // Buscar email pela matrícula
-      const { data: perfil, error: perfilError } = await supabaseClient
-        .from('perfis')
-        .select('email')
-        .eq('matricula', matricula)
-        .single();
+      // Buscar email pela matrícula usando RPC (acessível sem autenticação)
+      const { data, error: rpcError } = await supabaseClient
+        .rpc('buscar_email_por_matricula', { p_matricula: matricula });
 
-      if (perfilError || !perfil) {
+      if (rpcError || !data || data.length === 0) {
         throw new Error('Matrícula não encontrada.');
       }
 
-      return await this.login(perfil.email, senha);
+      return await this.login(data[0].email, senha);
     } catch (error) {
       console.error('Erro no login por matrícula:', error);
       return { success: false, error: error.message };
