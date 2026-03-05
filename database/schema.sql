@@ -396,3 +396,15 @@ BEGIN
   WHERE qt.token = p_token;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
+-- ============================================
+-- FUNÇÃO: buscar email pela matrícula (acessível por anon para login)
+-- ============================================
+CREATE OR REPLACE FUNCTION buscar_email_por_matricula(p_matricula VARCHAR)
+RETURNS TABLE(email VARCHAR) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT p.email FROM perfis p WHERE p.matricula = p_matricula;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
