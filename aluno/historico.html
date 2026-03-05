@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#4F46E5">
+  <title>Presença Digital — Histórico</title>
+  <link rel="manifest" href="../manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="loading-overlay" id="loading-initial">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar" id="navbar">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-brand">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        Presença Digital
+      </a>
+      <div class="navbar-actions">
+        <button class="theme-toggle" onclick="Utils.toggleTheme()" title="Alternar tema"></button>
+        <div class="navbar-user">
+          <span class="hidden-mobile" id="user-name"></span>
+          <div class="navbar-avatar" id="user-avatar"></div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="Auth.logout()" title="Sair">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="page">
+    <div class="container">
+      <div class="page-header flex justify-between items-center">
+        <div>
+          <h1 class="page-title">📋 Histórico de Presenças</h1>
+          <p class="page-subtitle">Veja todas as suas presenças registradas</p>
+        </div>
+        <a href="index.html" class="btn btn-outline btn-sm">← Voltar</a>
+      </div>
+
+      <!-- Filtros -->
+      <div class="card mb-3">
+        <div class="flex flex-wrap gap-2 items-center">
+          <div class="form-group" style="margin:0;flex:1;min-width:150px;">
+            <label class="form-label" for="filtro-disciplina">Disciplina</label>
+            <select class="form-select" id="filtro-disciplina" onchange="filtrar()">
+              <option value="">Todas</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0;flex:1;min-width:140px;">
+            <label class="form-label" for="filtro-status">Status</label>
+            <select class="form-select" id="filtro-status" onchange="filtrar()">
+              <option value="">Todos</option>
+              <option value="presente">Presente</option>
+              <option value="atrasado">Atrasado</option>
+              <option value="ausente">Ausente</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0;flex:1;min-width:140px;">
+            <label class="form-label" for="filtro-data-inicio">De</label>
+            <input class="form-input" type="date" id="filtro-data-inicio" onchange="filtrar()">
+          </div>
+          <div class="form-group" style="margin:0;flex:1;min-width:140px;">
+            <label class="form-label" for="filtro-data-fim">Até</label>
+            <input class="form-input" type="date" id="filtro-data-fim" onchange="filtrar()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Resumo -->
+      <div class="grid grid-3 gap-2 mb-3" id="resumo-filtrado">
+        <div class="card stat-card">
+          <div class="stat-value" id="resumo-total">--</div>
+          <div class="stat-label">Total</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-value status-presente" id="resumo-freq">--</div>
+          <div class="stat-label">% Frequência</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-value status-atrasado" id="resumo-atrasos">--</div>
+          <div class="stat-label">Atrasos</div>
+        </div>
+      </div>
+
+      <!-- Tabela -->
+      <div class="card">
+        <div class="table-wrapper">
+          <table class="table" id="tabela-historico">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Disciplina</th>
+                <th>Turma</th>
+                <th>Horário</th>
+                <th>Chegada</th>
+                <th>Status</th>
+                <th>Atraso</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-historico">
+              <tr><td colspan="7" class="text-center text-muted p-4">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+    let perfil = null;
+    let todasPresencas = [];
+    let disciplinas = [];
+
+    async function init() {
+      const autorizado = await Auth.requireRole('aluno');
+      if (!autorizado) return;
+
+      perfil = await Auth.getPerfil();
+      document.getElementById('user-name').textContent = perfil.nome.split(' ')[0];
+      document.getElementById('user-avatar').textContent = Utils.getIniciais(perfil.nome);
+      document.getElementById('loading-initial').style.display = 'none';
+
+      await carregarHistorico();
+    }
+
+    async function carregarHistorico() {
+      try {
+        // Buscar presenças com joins
+        const { data, error } = await supabaseClient
+          .from('presencas')
+          .select(`
+            id, data, hora_registro, status, minutos_atraso, metodo, distancia_metros,
+            turmas (
+              nome_turma, hora_inicio, sala,
+              disciplinas ( nome )
+            )
+          `)
+          .eq('aluno_id', perfil.id)
+          .order('data', { ascending: false })
+          .order('hora_registro', { ascending: false });
+
+        if (error) throw error;
+
+        todasPresencas = data || [];
+
+        // Extrair disciplinas únicas para filtro
+        const discSet = new Set();
+        todasPresencas.forEach(p => {
+          if (p.turmas?.disciplinas?.nome) discSet.add(p.turmas.disciplinas.nome);
+        });
+        disciplinas = [...discSet].sort();
+
+        const select = document.getElementById('filtro-disciplina');
+        select.innerHTML = '<option value="">Todas</option>' +
+          disciplinas.map(d => `<option value="${Utils.escapeHtml(d)}">${Utils.escapeHtml(d)}</option>`).join('');
+
+        filtrar();
+      } catch (err) {
+        console.error('Erro ao carregar histórico:', err);
+        document.getElementById('tbody-historico').innerHTML =
+          '<tr><td colspan="7" class="text-center text-danger p-4">Erro ao carregar dados.</td></tr>';
+      }
+    }
+
+    function filtrar() {
+      const disciplina = document.getElementById('filtro-disciplina').value;
+      const status = document.getElementById('filtro-status').value;
+      const dataInicio = document.getElementById('filtro-data-inicio').value;
+      const dataFim = document.getElementById('filtro-data-fim').value;
+
+      let filtrado = todasPresencas;
+
+      if (disciplina) {
+        filtrado = filtrado.filter(p => p.turmas?.disciplinas?.nome === disciplina);
+      }
+      if (status) {
+        filtrado = filtrado.filter(p => p.status === status);
+      }
+      if (dataInicio) {
+        filtrado = filtrado.filter(p => p.data >= dataInicio);
+      }
+      if (dataFim) {
+        filtrado = filtrado.filter(p => p.data <= dataFim);
+      }
+
+      renderTabela(filtrado);
+      renderResumo(filtrado);
+    }
+
+    function renderTabela(dados) {
+      const tbody = document.getElementById('tbody-historico');
+
+      if (dados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted p-4">Nenhum registro encontrado.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = dados.map(p => {
+        const badgeClass = p.status === 'presente' ? 'badge-success' :
+                           p.status === 'atrasado' ? 'badge-warning' : 'badge-danger';
+        const statusLabel = p.status.charAt(0).toUpperCase() + p.status.slice(1);
+        const horaChegada = p.hora_registro ? new Date(p.hora_registro).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--';
+
+        return `
+          <tr>
+            <td>${Utils.formatDate(p.data)}</td>
+            <td>${Utils.escapeHtml(p.turmas?.disciplinas?.nome || '--')}</td>
+            <td>${Utils.escapeHtml(p.turmas?.nome_turma || '--')}</td>
+            <td>${Utils.formatTime(p.turmas?.hora_inicio)}</td>
+            <td>${horaChegada}</td>
+            <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
+            <td>${p.minutos_atraso > 0 ? p.minutos_atraso + ' min' : '-'}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderResumo(dados) {
+      const total = dados.length;
+      const presentes = dados.filter(p => p.status === 'presente').length;
+      const atrasados = dados.filter(p => p.status === 'atrasado').length;
+      const freq = total > 0 ? Math.round(((presentes + atrasados) / total) * 100) : 0;
+
+      document.getElementById('resumo-total').textContent = total;
+      document.getElementById('resumo-freq').textContent = freq + '%';
+      document.getElementById('resumo-atrasos').textContent = atrasados;
+    }
+
+    init();
+  </script>
+</body>
+</html>

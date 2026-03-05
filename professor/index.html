@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#4F46E5">
+  <title>Presença Digital — Painel do Professor</title>
+  <link rel="manifest" href="../manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="loading-overlay" id="loading-initial"><div class="spinner"></div></div>
+
+  <div class="layout-sidebar">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="navbar-brand" style="padding:0.5rem 0;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Presença Digital
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="sidebar-link active" onclick="showSection('dashboard')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </a>
+        <a href="#" class="sidebar-link" onclick="showSection('disciplinas')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          Disciplinas
+        </a>
+        <a href="#" class="sidebar-link" onclick="showSection('turmas')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Turmas
+        </a>
+        <a href="#" class="sidebar-link" onclick="showSection('qrcode')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          QR Code
+        </a>
+        <a href="#" class="sidebar-link" onclick="showSection('presencas')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Presenças
+        </a>
+      </nav>
+      <div style="border-top:1px solid var(--border);padding-top:1rem;">
+        <div class="flex items-center gap-1" style="margin-bottom:0.5rem;">
+          <div class="navbar-avatar" id="sidebar-avatar"></div>
+          <div>
+            <div style="font-weight:600;font-size:0.875rem;" id="sidebar-nome"></div>
+            <div class="text-sm text-muted">Professor</div>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm btn-block" onclick="Auth.logout()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sair
+        </button>
+      </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Main -->
+    <div class="main-content">
+      <!-- Mobile menu -->
+      <div class="flex items-center justify-between mb-3" style="display:flex;">
+        <button class="btn btn-ghost btn-icon menu-toggle" onclick="toggleSidebar()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <button class="theme-toggle" onclick="Utils.toggleTheme()"></button>
+      </div>
+
+      <!-- ===== DASHBOARD ===== -->
+      <section id="section-dashboard">
+        <div class="page-header">
+          <h1 class="page-title">📊 Dashboard</h1>
+          <p class="page-subtitle" id="dash-date"></p>
+        </div>
+
+        <div class="grid grid-3 gap-2 mb-3">
+          <div class="card stat-card">
+            <div class="stat-value" id="dash-total-alunos" style="color:var(--primary)">--</div>
+            <div class="stat-label">Alunos</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-value status-presente" id="dash-presentes-hoje">--</div>
+            <div class="stat-label">Presentes Hoje</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-value status-atrasado" id="dash-atrasados-hoje">--</div>
+            <div class="stat-label">Atrasados Hoje</div>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header">
+            <h3>Aulas de Hoje</h3>
+          </div>
+          <div id="dash-aulas-hoje">
+            <div class="empty-state"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Últimas Presenças</h3>
+          </div>
+          <div class="table-wrapper">
+            <table class="table">
+              <thead>
+                <tr><th>Aluno</th><th>Disciplina</th><th>Hora</th><th>Status</th></tr>
+              </thead>
+              <tbody id="dash-ultimas-presencas">
+                <tr><td colspan="4" class="text-center text-muted p-3">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== DISCIPLINAS ===== -->
+      <section id="section-disciplinas" class="hidden">
+        <div class="page-header flex justify-between items-center">
+          <div>
+            <h1 class="page-title">📚 Disciplinas</h1>
+            <p class="page-subtitle">Gerencie suas disciplinas</p>
+          </div>
+          <button class="btn btn-primary" onclick="modalNovaDisciplina()">+ Nova Disciplina</button>
+        </div>
+        <div id="lista-disciplinas" class="grid grid-2 gap-2">
+          <div class="empty-state"><div class="spinner"></div></div>
+        </div>
+      </section>
+
+      <!-- ===== TURMAS ===== -->
+      <section id="section-turmas" class="hidden">
+        <div class="page-header flex justify-between items-center">
+          <div>
+            <h1 class="page-title">👥 Turmas</h1>
+            <p class="page-subtitle">Gerencie turmas e alunos</p>
+          </div>
+          <button class="btn btn-primary" onclick="modalNovaTurma()">+ Nova Turma</button>
+        </div>
+        <div id="lista-turmas">
+          <div class="empty-state"><div class="spinner"></div></div>
+        </div>
+      </section>
+
+      <!-- ===== QR CODE ===== -->
+      <section id="section-qrcode" class="hidden">
+        <div class="page-header">
+          <h1 class="page-title">📱 Gerador de QR Code</h1>
+          <p class="page-subtitle">Gere QR Codes dinâmicos para suas aulas</p>
+        </div>
+
+        <div class="card mb-3">
+          <div class="form-group">
+            <label class="form-label">Selecione a Turma</label>
+            <select class="form-select" id="qr-turma-select" onchange="prepararQR()">
+              <option value="">-- Selecione --</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-lg btn-block" id="btn-gerar-qr" onclick="iniciarQR()" disabled>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            Iniciar Aula — Gerar QR Code
+          </button>
+        </div>
+
+        <div class="card hidden" id="qr-display">
+          <div class="qr-container">
+            <h3 id="qr-turma-nome"></h3>
+            <div class="qr-code" id="qr-code-img"></div>
+            <div>
+              <span class="text-sm text-secondary">Expira em: </span>
+              <span class="qr-timer" id="qr-timer">05:00</span>
+            </div>
+            <p class="text-sm text-muted">O QR Code será renovado automaticamente a cada 5 minutos</p>
+            <button class="btn btn-danger" onclick="pararQR()">Parar / Encerrar Aula</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== PRESENÇAS ===== -->
+      <section id="section-presencas" class="hidden">
+        <div class="page-header">
+          <h1 class="page-title">📋 Relatório de Presenças</h1>
+          <p class="page-subtitle">Visualize e exporte as presenças</p>
+        </div>
+
+        <div class="card mb-3">
+          <div class="flex flex-wrap gap-2">
+            <div class="form-group" style="margin:0;flex:1;min-width:180px;">
+              <label class="form-label">Turma</label>
+              <select class="form-select" id="pres-turma-select" onchange="carregarPresencas()">
+                <option value="">Todas</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0;flex:1;min-width:140px;">
+              <label class="form-label">Data</label>
+              <input class="form-input" type="date" id="pres-data" onchange="carregarPresencas()">
+            </div>
+            <div class="form-group" style="margin:0;align-self:flex-end;">
+              <button class="btn btn-outline btn-sm" onclick="exportarCSV()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Exportar CSV
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-wrapper">
+            <table class="table">
+              <thead>
+                <tr><th>Aluno</th><th>Matrícula</th><th>Data</th><th>Chegada</th><th>Status</th><th>Atraso</th><th>Distância</th></tr>
+              </thead>
+              <tbody id="pres-tbody">
+                <tr><td colspan="7" class="text-center text-muted p-3">Selecione uma turma ou data.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+    // ============================================
+    // VARIÁVEIS GLOBAIS
+    // ============================================
+    let perfil = null;
+    let minhasDisciplinas = [];
+    let minhasTurmas = [];
+    let qrInterval = null;
+    let qrTimerInterval = null;
+    let qrTurmaAtual = null;
+
+    // ============================================
+    // INICIALIZAÇÃO
+    // ============================================
+    async function init() {
+      const autorizado = await Auth.requireRole('professor');
+      if (!autorizado) return;
+
+      perfil = await Auth.getPerfil();
+      document.getElementById('sidebar-nome').textContent = perfil.nome.split(' ')[0];
+      document.getElementById('sidebar-avatar').textContent = Utils.getIniciais(perfil.nome);
+      document.getElementById('dash-date').textContent =
+        new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      document.getElementById('loading-initial').style.display = 'none';
+
+      await carregarDadosIniciais();
+    }
+
+    async function carregarDadosIniciais() {
+      await Promise.all([
+        carregarDisciplinas(),
+        carregarTurmasGeral(),
+      ]);
+      await carregarDashboard();
+    }
+
+    // ============================================
+    // NAVEGAÇÃO / SIDEBAR
+    // ============================================
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    function showSection(name) {
+      ['dashboard', 'disciplinas', 'turmas', 'qrcode', 'presencas'].forEach(s => {
+        document.getElementById('section-' + s).classList.toggle('hidden', s !== name);
+      });
+      // Atualizar nav ativa
+      document.querySelectorAll('.sidebar-link').forEach((link, i) => {
+        const sections = ['dashboard', 'disciplinas', 'turmas', 'qrcode', 'presencas'];
+        link.classList.toggle('active', sections[i] === name);
+      });
+      // Fechar sidebar mobile
+      document.getElementById('sidebar').classList.remove('open');
+
+      // Carregar dados específicos
+      if (name === 'presencas') carregarPresencas();
+      if (name === 'turmas') renderTurmas();
+      if (name === 'qrcode') popularSelectTurmasQR();
+    }
+
+    // ============================================
+    // DASHBOARD
+    // ============================================
+    async function carregarDashboard() {
+      try {
+        // Total de alunos nas minhas turmas
+        const alunoIds = new Set();
+        for (const turma of minhasTurmas) {
+          const { data } = await supabaseClient
+            .from('turma_alunos')
+            .select('aluno_id')
+            .eq('turma_id', turma.id);
+          (data || []).forEach(a => alunoIds.add(a.aluno_id));
+        }
+        document.getElementById('dash-total-alunos').textContent = alunoIds.size;
+
+        // Presenças de hoje
+        const turmaIds = minhasTurmas.map(t => t.id);
+        if (turmaIds.length > 0) {
+          const { data: presHoje } = await supabaseClient
+            .from('presencas')
+            .select('status')
+            .in('turma_id', turmaIds)
+            .eq('data', Utils.today());
+
+          const presentes = (presHoje || []).filter(p => p.status === 'presente').length;
+          const atrasados = (presHoje || []).filter(p => p.status === 'atrasado').length;
+          document.getElementById('dash-presentes-hoje').textContent = presentes;
+          document.getElementById('dash-atrasados-hoje').textContent = atrasados;
+        }
+
+        // Aulas de hoje
+        const diaSemana = Utils.getDiaSemana();
+        const aulasHoje = minhasTurmas.filter(t => t.dia_semana === diaSemana);
+        const container = document.getElementById('dash-aulas-hoje');
+
+        if (aulasHoje.length === 0) {
+          container.innerHTML = '<div class="empty-state"><p>Nenhuma aula hoje.</p></div>';
+        } else {
+          container.innerHTML = aulasHoje.map(a => `
+            <div class="presenca-card" style="margin-bottom:0.5rem;">
+              <div style="flex:1;">
+                <strong>${Utils.escapeHtml(a.disciplinas?.nome || '')}</strong>
+                <span class="badge badge-info">${Utils.escapeHtml(a.nome_turma)}</span>
+                <p class="text-sm text-secondary">
+                  🕐 ${Utils.formatTime(a.hora_inicio)} - ${Utils.formatTime(a.hora_fim)}
+                  ${a.sala ? ` · 📍 ${Utils.escapeHtml(a.sala)}` : ''}
+                </p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="showSection('qrcode');document.getElementById('qr-turma-select').value='${a.id}';prepararQR();">QR Code</button>
+            </div>
+          `).join('');
+        }
+
+        // Últimas presenças
+        if (turmaIds.length > 0) {
+          const { data: ultimas } = await supabaseClient
+            .from('presencas')
+            .select('hora_registro, status, aluno_id, turma_id, perfis!presencas_aluno_id_fkey(nome), turmas!presencas_turma_id_fkey(disciplinas(nome))')
+            .in('turma_id', turmaIds)
+            .order('hora_registro', { ascending: false })
+            .limit(10);
+
+          const tbody = document.getElementById('dash-ultimas-presencas');
+          if (!ultimas || ultimas.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted p-3">Nenhuma presença registrada.</td></tr>';
+          } else {
+            tbody.innerHTML = ultimas.map(p => {
+              const badgeClass = p.status === 'presente' ? 'badge-success' : p.status === 'atrasado' ? 'badge-warning' : 'badge-danger';
+              return `<tr>
+                <td>${Utils.escapeHtml(p.perfis?.nome || '--')}</td>
+                <td>${Utils.escapeHtml(p.turmas?.disciplinas?.nome || '--')}</td>
+                <td>${new Date(p.hora_registro).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
+                <td><span class="badge ${badgeClass}">${p.status}</span></td>
+              </tr>`;
+            }).join('');
+          }
+        }
+      } catch (err) {
+        console.error('Erro dashboard:', err);
+      }
+    }
+
+    // ============================================
+    // DISCIPLINAS
+    // ============================================
+    async function carregarDisciplinas() {
+      try {
+        const { data, error } = await supabaseClient
+          .from('disciplinas')
+          .select('*')
+          .eq('professor_id', perfil.id)
+          .order('nome');
+
+        if (error) throw error;
+        minhasDisciplinas = data || [];
+        renderDisciplinas();
+      } catch (err) {
+        console.error('Erro ao carregar disciplinas:', err);
+      }
+    }
+
+    function renderDisciplinas() {
+      const container = document.getElementById('lista-disciplinas');
+      if (minhasDisciplinas.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state" style="grid-column:1/-1;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <p>Nenhuma disciplina cadastrada.</p>
+            <button class="btn btn-primary mt-2" onclick="modalNovaDisciplina()">+ Criar Disciplina</button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = minhasDisciplinas.map(d => `
+        <div class="card">
+          <div class="flex justify-between items-center">
+            <h4>${Utils.escapeHtml(d.nome)}</h4>
+            <div class="flex gap-1">
+              <button class="btn btn-ghost btn-sm" onclick="modalEditarDisciplina('${d.id}','${Utils.escapeHtml(d.nome)}')">✏️</button>
+              <button class="btn btn-ghost btn-sm" onclick="deletarDisciplina('${d.id}')">🗑️</button>
+            </div>
+          </div>
+          <p class="text-sm text-muted">Criada em ${Utils.formatDate(d.created_at)}</p>
+        </div>
+      `).join('');
+    }
+
+    function modalNovaDisciplina() {
+      Utils.showModal('Nova Disciplina', `
+        <form onsubmit="salvarDisciplina(event)">
+          <div class="form-group">
+            <label class="form-label">Nome da Disciplina</label>
+            <input class="form-input" type="text" id="disc-nome" placeholder="Ex: Informática Básica" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Salvar</button>
+        </form>
+      `);
+    }
+
+    function modalEditarDisciplina(id, nomeAtual) {
+      Utils.showModal('Editar Disciplina', `
+        <form onsubmit="atualizarDisciplina(event, '${id}')">
+          <div class="form-group">
+            <label class="form-label">Nome da Disciplina</label>
+            <input class="form-input" type="text" id="disc-nome-edit" value="${nomeAtual}" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Atualizar</button>
+        </form>
+      `);
+    }
+
+    async function salvarDisciplina(e) {
+      e.preventDefault();
+      const nome = document.getElementById('disc-nome').value.trim();
+      const { error } = await supabaseClient
+        .from('disciplinas')
+        .insert({ nome, professor_id: perfil.id });
+
+      if (error) {
+        Utils.showToast('Erro ao criar disciplina: ' + error.message, 'error');
+        return;
+      }
+      Utils.closeModal();
+      Utils.showToast('Disciplina criada com sucesso!', 'success');
+      await carregarDisciplinas();
+    }
+
+    async function atualizarDisciplina(e, id) {
+      e.preventDefault();
+      const nome = document.getElementById('disc-nome-edit').value.trim();
+      const { error } = await supabaseClient
+        .from('disciplinas')
+        .update({ nome })
+        .eq('id', id);
+
+      if (error) {
+        Utils.showToast('Erro ao atualizar: ' + error.message, 'error');
+        return;
+      }
+      Utils.closeModal();
+      Utils.showToast('Disciplina atualizada!', 'success');
+      await carregarDisciplinas();
+    }
+
+    async function deletarDisciplina(id) {
+      if (!confirm('Tem certeza? Isso excluirá todas as turmas e presenças vinculadas.')) return;
+      const { error } = await supabaseClient.from('disciplinas').delete().eq('id', id);
+      if (error) {
+        Utils.showToast('Erro ao excluir: ' + error.message, 'error');
+        return;
+      }
+      Utils.showToast('Disciplina excluída.', 'success');
+      await carregarDisciplinas();
+      await carregarTurmasGeral();
+    }
+
+    // ============================================
+    // TURMAS
+    // ============================================
+    async function carregarTurmasGeral() {
+      try {
+        const { data, error } = await supabaseClient
+          .from('turmas')
+          .select('*, disciplinas(nome, professor_id)')
+          .order('dia_semana')
+          .order('hora_inicio');
+
+        if (error) throw error;
+        // Filtrar apenas turmas do professor logado
+        minhasTurmas = (data || []).filter(t => t.disciplinas?.professor_id === perfil.id);
+        renderTurmas();
+      } catch (err) {
+        console.error('Erro ao carregar turmas:', err);
+      }
+    }
+
+    function renderTurmas() {
+      const container = document.getElementById('lista-turmas');
+      if (minhasTurmas.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <p>Nenhuma turma cadastrada.</p>
+            <button class="btn btn-primary mt-2" onclick="modalNovaTurma()">+ Criar Turma</button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = minhasTurmas.map(t => `
+        <div class="card" style="margin-bottom:1rem;">
+          <div class="flex justify-between items-center mb-1">
+            <div>
+              <h4>${Utils.escapeHtml(t.nome_turma)}</h4>
+              <p class="text-sm text-secondary">${Utils.escapeHtml(t.disciplinas?.nome || '')}</p>
+            </div>
+            <div class="flex gap-1">
+              <button class="btn btn-ghost btn-sm" onclick="verAlunosTurma('${t.id}', '${Utils.escapeHtml(t.nome_turma)}')">👥</button>
+              <button class="btn btn-ghost btn-sm" onclick="modalEditarTurma('${t.id}')">✏️</button>
+              <button class="btn btn-ghost btn-sm" onclick="deletarTurma('${t.id}')">🗑️</button>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-1">
+            <span class="badge badge-info">${Utils.getDiaSemanaLabel(t.dia_semana)}</span>
+            <span class="badge badge-info">🕐 ${Utils.formatTime(t.hora_inicio)} - ${Utils.formatTime(t.hora_fim)}</span>
+            ${t.sala ? `<span class="badge badge-info">📍 ${Utils.escapeHtml(t.sala)}</span>` : ''}
+            ${t.latitude ? '<span class="badge badge-success">GPS ✓</span>' : '<span class="badge badge-warning">Sem GPS</span>'}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function modalNovaTurma() {
+      if (minhasDisciplinas.length === 0) {
+        Utils.showToast('Crie uma disciplina primeiro.', 'warning');
+        showSection('disciplinas');
+        return;
+      }
+
+      const discOptions = minhasDisciplinas.map(d =>
+        `<option value="${d.id}">${Utils.escapeHtml(d.nome)}</option>`
+      ).join('');
+
+      const diasOptions = [0,1,2,3,4,5,6].map(d =>
+        `<option value="${d}">${Utils.getDiaSemanaLabel(d)}</option>`
+      ).join('');
+
+      Utils.showModal('Nova Turma', `
+        <form onsubmit="salvarTurma(event)">
+          <div class="form-group">
+            <label class="form-label">Disciplina</label>
+            <select class="form-select" id="turma-disc" required>${discOptions}</select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nome da Turma</label>
+            <input class="form-input" type="text" id="turma-nome" placeholder="Ex: Turma A - Manhã" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Dia da Semana</label>
+            <select class="form-select" id="turma-dia" required>${diasOptions}</select>
+          </div>
+          <div class="flex gap-2">
+            <div class="form-group" style="flex:1;">
+              <label class="form-label">Início</label>
+              <input class="form-input" type="time" id="turma-inicio" required>
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label class="form-label">Fim</label>
+              <input class="form-input" type="time" id="turma-fim" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sala</label>
+            <input class="form-input" type="text" id="turma-sala" placeholder="Ex: Lab 01">
+          </div>
+          <div class="flex gap-2">
+            <div class="form-group" style="flex:1;">
+              <label class="form-label">Latitude</label>
+              <input class="form-input" type="number" step="any" id="turma-lat" placeholder="-23.5505">
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label class="form-label">Longitude</label>
+              <input class="form-input" type="number" step="any" id="turma-lng" placeholder="-46.6333">
+            </div>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm btn-block mb-2" onclick="capturarGPS()">
+            📍 Usar Minha Localização Atual
+          </button>
+          <div class="form-group">
+            <label class="form-label">Raio de Validação (metros)</label>
+            <input class="form-input" type="number" id="turma-raio" value="50" min="10" max="500">
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Salvar Turma</button>
+        </form>
+      `);
+    }
+
+    async function capturarGPS() {
+      try {
+        Utils.showToast('Obtendo localização...', 'info');
+        const loc = await Utils.obterLocalizacao();
+        document.getElementById('turma-lat').value = loc.latitude.toFixed(6);
+        document.getElementById('turma-lng').value = loc.longitude.toFixed(6);
+        Utils.showToast('Localização capturada!', 'success');
+      } catch (err) {
+        Utils.showToast(err.message, 'error');
+      }
+    }
+
+    async function salvarTurma(e) {
+      e.preventDefault();
+      const dados = {
+        disciplina_id: document.getElementById('turma-disc').value,
+        nome_turma: document.getElementById('turma-nome').value.trim(),
+        dia_semana: parseInt(document.getElementById('turma-dia').value),
+        hora_inicio: document.getElementById('turma-inicio').value,
+        hora_fim: document.getElementById('turma-fim').value,
+        sala: document.getElementById('turma-sala').value.trim() || null,
+        latitude: parseFloat(document.getElementById('turma-lat').value) || null,
+        longitude: parseFloat(document.getElementById('turma-lng').value) || null,
+        raio_metros: parseInt(document.getElementById('turma-raio').value) || 50,
+      };
+
+      const { error } = await supabaseClient.from('turmas').insert(dados);
+      if (error) {
+        Utils.showToast('Erro: ' + error.message, 'error');
+        return;
+      }
+      Utils.closeModal();
+      Utils.showToast('Turma criada!', 'success');
+      await carregarTurmasGeral();
+    }
+
+    async function modalEditarTurma(turmaId) {
+      const turma = minhasTurmas.find(t => t.id === turmaId);
+      if (!turma) return;
+
+      const discOptions = minhasDisciplinas.map(d =>
+        `<option value="${d.id}" ${d.id === turma.disciplina_id ? 'selected' : ''}>${Utils.escapeHtml(d.nome)}</option>`
+      ).join('');
+
+      const diasOptions = [0,1,2,3,4,5,6].map(d =>
+        `<option value="${d}" ${d === turma.dia_semana ? 'selected' : ''}>${Utils.getDiaSemanaLabel(d)}</option>`
+      ).join('');
+
+      Utils.showModal('Editar Turma', `
+        <form onsubmit="atualizarTurma(event, '${turmaId}')">
+          <div class="form-group">
+            <label class="form-label">Disciplina</label>
+            <select class="form-select" id="ed-turma-disc" required>${discOptions}</select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nome da Turma</label>
+            <input class="form-input" type="text" id="ed-turma-nome" value="${Utils.escapeHtml(turma.nome_turma)}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Dia da Semana</label>
+            <select class="form-select" id="ed-turma-dia" required>${diasOptions}</select>
+          </div>
+          <div class="flex gap-2">
+            <div class="form-group" style="flex:1;">
+              <label class="form-label">Início</label>
+              <input class="form-input" type="time" id="ed-turma-inicio" value="${turma.hora_inicio}" required>
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label class="form-label">Fim</label>
+              <input class="form-input" type="time" id="ed-turma-fim" value="${turma.hora_fim}" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sala</label>
+            <input class="form-input" type="text" id="ed-turma-sala" value="${Utils.escapeHtml(turma.sala || '')}">
+          </div>
+          <div class="flex gap-2">
+            <div class="form-group" style="flex:1;">
+              <label class="form-label">Latitude</label>
+              <input class="form-input" type="number" step="any" id="ed-turma-lat" value="${turma.latitude || ''}">
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label class="form-label">Longitude</label>
+              <input class="form-input" type="number" step="any" id="ed-turma-lng" value="${turma.longitude || ''}">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Raio (metros)</label>
+            <input class="form-input" type="number" id="ed-turma-raio" value="${turma.raio_metros || 50}">
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Atualizar</button>
+        </form>
+      `);
+    }
+
+    async function atualizarTurma(e, turmaId) {
+      e.preventDefault();
+      const dados = {
+        disciplina_id: document.getElementById('ed-turma-disc').value,
+        nome_turma: document.getElementById('ed-turma-nome').value.trim(),
+        dia_semana: parseInt(document.getElementById('ed-turma-dia').value),
+        hora_inicio: document.getElementById('ed-turma-inicio').value,
+        hora_fim: document.getElementById('ed-turma-fim').value,
+        sala: document.getElementById('ed-turma-sala').value.trim() || null,
+        latitude: parseFloat(document.getElementById('ed-turma-lat').value) || null,
+        longitude: parseFloat(document.getElementById('ed-turma-lng').value) || null,
+        raio_metros: parseInt(document.getElementById('ed-turma-raio').value) || 50,
+      };
+
+      const { error } = await supabaseClient.from('turmas').update(dados).eq('id', turmaId);
+      if (error) {
+        Utils.showToast('Erro: ' + error.message, 'error');
+        return;
+      }
+      Utils.closeModal();
+      Utils.showToast('Turma atualizada!', 'success');
+      await carregarTurmasGeral();
+    }
+
+    async function deletarTurma(id) {
+      if (!confirm('Excluir turma e todos os registros de presença?')) return;
+      const { error } = await supabaseClient.from('turmas').delete().eq('id', id);
+      if (error) {
+        Utils.showToast('Erro: ' + error.message, 'error');
+        return;
+      }
+      Utils.showToast('Turma excluída.', 'success');
+      await carregarTurmasGeral();
+    }
+
+    // --- Alunos da Turma ---
+    async function verAlunosTurma(turmaId, nomeTurma) {
+      const { data: alunos, error } = await supabaseClient
+        .from('turma_alunos')
+        .select('id, aluno_id, perfis!turma_alunos_aluno_id_fkey(nome, matricula)')
+        .eq('turma_id', turmaId);
+
+      if (error) {
+        Utils.showToast('Erro: ' + error.message, 'error');
+        return;
+      }
+
+      const listaHtml = (alunos || []).length === 0
+        ? '<p class="text-muted text-center">Nenhum aluno vinculado.</p>'
+        : '<div style="max-height:300px;overflow-y:auto;">' + (alunos || []).map(a => `
+          <div class="presenca-card" style="margin-bottom:0.5rem;">
+            <div style="flex:1;">
+              <strong>${Utils.escapeHtml(a.perfis?.nome || '--')}</strong>
+              <p class="text-sm text-muted">Matrícula: ${Utils.escapeHtml(a.perfis?.matricula || '--')}</p>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="removerAluno('${a.id}', '${turmaId}', '${Utils.escapeHtml(nomeTurma)}')">Remover</button>
+          </div>
+        `).join('') + '</div>';
+
+      Utils.showModal(`Alunos — ${nomeTurma}`, `
+        ${listaHtml}
+        <hr style="margin:1rem 0;border:none;border-top:1px solid var(--border);">
+        <h4 class="mb-1">Adicionar Aluno</h4>
+        <div class="flex gap-1">
+          <input class="form-input" type="text" id="add-aluno-matricula" placeholder="Matrícula do aluno" style="flex:1;">
+          <button class="btn btn-primary" onclick="adicionarAluno('${turmaId}', '${Utils.escapeHtml(nomeTurma)}')">Adicionar</button>
+        </div>
+      `);
+    }
+
+    async function adicionarAluno(turmaId, nomeTurma) {
+      const matricula = document.getElementById('add-aluno-matricula').value.trim();
+      if (!matricula) return;
+
+      // Buscar aluno pela matrícula
+      const { data: aluno, error: aErr } = await supabaseClient
+        .from('perfis')
+        .select('id, nome')
+        .eq('matricula', matricula)
+        .eq('role', 'aluno')
+        .single();
+
+      if (aErr || !aluno) {
+        Utils.showToast('Aluno com matrícula "' + matricula + '" não encontrado.', 'error');
+        return;
+      }
+
+      const { error } = await supabaseClient
+        .from('turma_alunos')
+        .insert({ turma_id: turmaId, aluno_id: aluno.id });
+
+      if (error) {
+        if (error.message.includes('duplicate') || error.code === '23505') {
+          Utils.showToast('Aluno já está nesta turma.', 'warning');
+        } else {
+          Utils.showToast('Erro: ' + error.message, 'error');
+        }
+        return;
+      }
+
+      Utils.showToast(`${aluno.nome} adicionado!`, 'success');
+      Utils.closeModal();
+      verAlunosTurma(turmaId, nomeTurma);
+    }
+
+    async function removerAluno(id, turmaId, nomeTurma) {
+      if (!confirm('Remover aluno desta turma?')) return;
+      const { error } = await supabaseClient.from('turma_alunos').delete().eq('id', id);
+      if (error) {
+        Utils.showToast('Erro: ' + error.message, 'error');
+        return;
+      }
+      Utils.showToast('Aluno removido.', 'success');
+      Utils.closeModal();
+      verAlunosTurma(turmaId, nomeTurma);
+    }
+
+    // ============================================
+    // QR CODE DINÂMICO
+    // ============================================
+    function popularSelectTurmasQR() {
+      const select = document.getElementById('qr-turma-select');
+      const optionsHtml = minhasTurmas.map(t =>
+        `<option value="${t.id}">${Utils.escapeHtml(t.disciplinas?.nome || '')} — ${Utils.escapeHtml(t.nome_turma)} (${Utils.getDiaSemanaLabel(t.dia_semana)} ${Utils.formatTime(t.hora_inicio)})</option>`
+      ).join('');
+      select.innerHTML = '<option value="">-- Selecione a Turma --</option>' + optionsHtml;
+
+      // Também popular select de presenças
+      const selectPres = document.getElementById('pres-turma-select');
+      selectPres.innerHTML = '<option value="">Todas</option>' + optionsHtml;
+    }
+
+    function prepararQR() {
+      const turmaId = document.getElementById('qr-turma-select').value;
+      document.getElementById('btn-gerar-qr').disabled = !turmaId;
+    }
+
+    async function iniciarQR() {
+      const turmaId = document.getElementById('qr-turma-select').value;
+      if (!turmaId) return;
+
+      qrTurmaAtual = minhasTurmas.find(t => t.id === turmaId);
+      if (!qrTurmaAtual) return;
+
+      document.getElementById('qr-turma-nome').textContent =
+        `${qrTurmaAtual.disciplinas?.nome} — ${qrTurmaAtual.nome_turma}`;
+      document.getElementById('qr-display').classList.remove('hidden');
+      document.getElementById('btn-gerar-qr').disabled = true;
+
+      await gerarNovoQR();
+
+      // Renovar QR a cada 5 minutos
+      qrInterval = setInterval(gerarNovoQR, CONFIG.QR_VALIDADE_MIN * 60 * 1000);
+    }
+
+    async function gerarNovoQR() {
+      if (!qrTurmaAtual) return;
+
+      try {
+        const expiraEm = new Date(Date.now() + CONFIG.QR_VALIDADE_MIN * 60 * 1000).toISOString();
+
+        const { data, error } = await supabaseClient
+          .from('qr_tokens')
+          .insert({
+            turma_id: qrTurmaAtual.id,
+            expira_em: expiraEm
+          })
+          .select('token')
+          .single();
+
+        if (error) throw error;
+
+        const url = `${CONFIG.BASE_URL}/presenca.html?token=${data.token}`;
+
+        // Gerar QR Code
+        const qrContainer = document.getElementById('qr-code-img');
+        qrContainer.innerHTML = '';
+
+        const canvas = document.createElement('canvas');
+        await QRCode.toCanvas(canvas, url, {
+          width: 280,
+          margin: 2,
+          color: { dark: '#111827', light: '#FFFFFF' }
+        });
+        qrContainer.appendChild(canvas);
+
+        // Iniciar timer
+        iniciarTimer(CONFIG.QR_VALIDADE_MIN * 60);
+
+      } catch (err) {
+        console.error('Erro ao gerar QR:', err);
+        Utils.showToast('Erro ao gerar QR Code.', 'error');
+      }
+    }
+
+    function iniciarTimer(segundos) {
+      if (qrTimerInterval) clearInterval(qrTimerInterval);
+      let restante = segundos;
+      const timerEl = document.getElementById('qr-timer');
+
+      const atualizar = () => {
+        const min = Math.floor(restante / 60);
+        const seg = restante % 60;
+        timerEl.textContent = `${String(min).padStart(2, '0')}:${String(seg).padStart(2, '0')}`;
+        timerEl.classList.toggle('expiring', restante <= 30);
+        restante--;
+        if (restante < 0) clearInterval(qrTimerInterval);
+      };
+
+      atualizar();
+      qrTimerInterval = setInterval(atualizar, 1000);
+    }
+
+    function pararQR() {
+      if (qrInterval) clearInterval(qrInterval);
+      if (qrTimerInterval) clearInterval(qrTimerInterval);
+      qrTurmaAtual = null;
+      document.getElementById('qr-display').classList.add('hidden');
+      document.getElementById('btn-gerar-qr').disabled = false;
+      Utils.showToast('QR Code desativado.', 'info');
+    }
+
+    // ============================================
+    // RELATÓRIO DE PRESENÇAS
+    // ============================================
+    async function carregarPresencas() {
+      const turmaId = document.getElementById('pres-turma-select').value;
+      const data = document.getElementById('pres-data').value;
+      const tbody = document.getElementById('pres-tbody');
+
+      let query = supabaseClient
+        .from('presencas')
+        .select(`
+          id, data, hora_registro, status, minutos_atraso, distancia_metros,
+          perfis!presencas_aluno_id_fkey(nome, matricula),
+          turmas!presencas_turma_id_fkey(nome_turma, disciplinas(nome, professor_id))
+        `)
+        .order('data', { ascending: false })
+        .order('hora_registro', { ascending: false })
+        .limit(200);
+
+      if (turmaId) query = query.eq('turma_id', turmaId);
+      if (data) query = query.eq('data', data);
+
+      const { data: presencas, error } = await query;
+
+      if (error) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Erro: ${error.message}</td></tr>`;
+        return;
+      }
+
+      // Filtrar apenas presenças do professor atual
+      const filtrado = (presencas || []).filter(p =>
+        p.turmas?.disciplinas?.professor_id === perfil.id
+      );
+
+      if (filtrado.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted p-3">Nenhum registro encontrado.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtrado.map(p => {
+        const badgeClass = p.status === 'presente' ? 'badge-success' : p.status === 'atrasado' ? 'badge-warning' : 'badge-danger';
+        const hora = p.hora_registro ? new Date(p.hora_registro).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--';
+
+        return `<tr>
+          <td>${Utils.escapeHtml(p.perfis?.nome || '--')}</td>
+          <td>${Utils.escapeHtml(p.perfis?.matricula || '--')}</td>
+          <td>${Utils.formatDate(p.data)}</td>
+          <td>${hora}</td>
+          <td><span class="badge ${badgeClass}">${p.status}</span></td>
+          <td>${p.minutos_atraso > 0 ? p.minutos_atraso + ' min' : '-'}</td>
+          <td>${p.distancia_metros ? p.distancia_metros + 'm' : '-'}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function exportarCSV() {
+      const table = document.querySelector('#pres-tbody');
+      const rows = table.querySelectorAll('tr');
+      if (rows.length === 0 || (rows.length === 1 && rows[0].querySelector('td[colspan]'))) {
+        Utils.showToast('Nenhum dado para exportar.', 'warning');
+        return;
+      }
+
+      let csv = 'Aluno,Matrícula,Data,Chegada,Status,Atraso,Distância\n';
+      rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 7) {
+          const line = Array.from(cells).map(c => `"${c.textContent.trim()}"`).join(',');
+          csv += line + '\n';
+        }
+      });
+
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `presencas_${Utils.today()}.csv`;
+      link.click();
+      Utils.showToast('CSV exportado!', 'success');
+    }
+
+    // Inicializar
+    init();
+  </script>
+</body>
+</html>
